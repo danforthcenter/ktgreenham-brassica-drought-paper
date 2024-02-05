@@ -22,7 +22,7 @@ library(data.table)
 library(magick)
 
 
-setwd("/Users/mgehan/Documents/kt-greenham-brassica/brassica-2023/")
+setwd("/Users/mgehan/Documents/github/ktgreenham-brassica-drought-paper/r-scripts/")
 
 ############################################
 # Brassica green color over time line graphs
@@ -34,6 +34,7 @@ vis.data.parents<-vis.data.parents[!grepl("R500-43",vis.data.parents$Genotype.ID
 
 uniquegenotypes=unique(vis.data.parents$Genotype.ID)
 
+
 vis.data.subset<-data.frame(vis.data.parents$plantbarcode,vis.data.parents$days,
                             vis.data.parents$Treatment.2,
                             vis.data.parents$Genotype.ID, 
@@ -41,6 +42,24 @@ vis.data.subset<-data.frame(vis.data.parents$plantbarcode,vis.data.parents$days,
                             vis.data.parents$percent_scenesed)
 
 colnames(vis.data.subset)<-c("barcode","day","treatment","genotype","frame","percent_yellow")
+
+
+vis.data.subset$genotype[grep("Ab4-28", vis.data.subset$genotype)]<-"Ab"
+vis.data.subset$genotype[grep("Al1-29", vis.data.subset$genotype)]<-"Al"
+vis.data.subset$genotype[grep("Av1-30", vis.data.subset$genotype)]<-"Av"
+vis.data.subset$genotype[grep("Br2-31", vis.data.subset$genotype)]<-"Br"
+vis.data.subset$genotype[grep("Ca4-32", vis.data.subset$genotype)]<-"Ca"
+vis.data.subset$genotype[grep("DH12.6-33", vis.data.subset$genotype)]<-"DH12"
+vis.data.subset$genotype[grep("Gr2-35", vis.data.subset$genotype)]<-"Gr"
+vis.data.subset$genotype[grep("Mu4-37", vis.data.subset$genotype)]<-"Mu"
+vis.data.subset$genotype[grep("Ne3-38", vis.data.subset$genotype)]<- "Ne"
+vis.data.subset$genotype[grep("Qu1-39", vis.data.subset$genotype)]<-"Qu"
+vis.data.subset$genotype[grep("Se2-40", vis.data.subset$genotype)]<-"Se"
+vis.data.subset$genotype[grep("Yu1-42", vis.data.subset$genotype)]<-"Yu1"
+vis.data.subset$genotype[grep("Da2-44", vis.data.subset$genotype)]<-"Da"
+vis.data.subset$genotype[grep("st1-45", vis.data.subset$genotype)]<-"St"
+vis.data.subset$genotype[grep("DH20", vis.data.subset$genotype)]<-"DH2"
+vis.data.subset$genotype[grep("Ze2", vis.data.subset$genotype)]<-"Ze"
 
 vis.data.subset$percent_green<-1-vis.data.subset$percent_yellow
 
@@ -54,7 +73,7 @@ yellow.avg=ddply(vis.data.subset, c("genotype","treatment","day"), summarise, N=
 pdf(file="brassica_percent_yellow.pdf",height=7,width=7,useDingbats=FALSE)
 ggplot(yellow.avg,aes(x=day,y=mean, group= treatment, colour = factor(treatment))) +
   geom_smooth()+
-  scale_color_manual(labels = c("WW", "WL"),values=c("chartreuse4", "darkgoldenrod2"))+
+  scale_color_manual(labels = c("WW", "WL"),values=c("#6495ED", "#FFA500"))+
   labs(x= "Days", y="Mean Percentage Yellow Area", col="Treatment")+
   theme_bw()+
   theme(legend.text = element_text(size = 14),legend.title = element_text(size = 14), axis.title = element_text(size=14))+
@@ -81,15 +100,32 @@ vis.data.subset<-data.frame(vis.data.parents$plantbarcode,vis.data.parents$days,
 
 colnames(vis.data.subset)<-c("barcode","day","treatment","genotype","frame","hue_circular_mean")
 
+vis.data.subset$genotype[grep("Ab4-28", vis.data.subset$genotype)]<-"Ab"
+vis.data.subset$genotype[grep("Al1-29", vis.data.subset$genotype)]<-"Al"
+vis.data.subset$genotype[grep("Av1-30", vis.data.subset$genotype)]<-"Av"
+vis.data.subset$genotype[grep("Br2-31", vis.data.subset$genotype)]<-"Br"
+vis.data.subset$genotype[grep("Ca4-32", vis.data.subset$genotype)]<-"Ca"
+vis.data.subset$genotype[grep("DH12.6-33", vis.data.subset$genotype)]<-"DH12"
+vis.data.subset$genotype[grep("Gr2-35", vis.data.subset$genotype)]<-"Gr"
+vis.data.subset$genotype[grep("Mu4-37", vis.data.subset$genotype)]<-"Mu"
+vis.data.subset$genotype[grep("Ne3-38", vis.data.subset$genotype)]<- "Ne"
+vis.data.subset$genotype[grep("Qu1-39", vis.data.subset$genotype)]<-"Qu"
+vis.data.subset$genotype[grep("Se2-40", vis.data.subset$genotype)]<-"Se"
+vis.data.subset$genotype[grep("Yu1-42", vis.data.subset$genotype)]<-"Yu1"
+vis.data.subset$genotype[grep("Da2-44", vis.data.subset$genotype)]<-"Da"
+vis.data.subset$genotype[grep("st1-45", vis.data.subset$genotype)]<-"St"
+vis.data.subset$genotype[grep("DH20", vis.data.subset$genotype)]<-"DH2"
+vis.data.subset$genotype[grep("Ze2", vis.data.subset$genotype)]<-"Ze"
+
 vis.data.subset$treatment[grep("100", vis.data.subset$treatment)] <- 'control'      	    
 vis.data.subset$treatment[grep("20", vis.data.subset$treatment)] <- 'drought'      	    
 
 hue.avg=ddply(vis.data.subset, c("genotype","treatment","day"), summarise, N=length(hue_circular_mean), mean=mean(hue_circular_mean), sd=sd(hue_circular_mean),se=sd/sqrt(N))
 
-pdf(file="brassica_hue.pdf",height=12,width=12,useDingbats=FALSE)
+pdf(file="brassica_hue.pdf",height=7,width=7,useDingbats=FALSE)
 ggplot(hue.avg,aes(x=day,y=mean, group= treatment, colour = factor(treatment))) +
   geom_smooth()+
-  scale_color_manual(labels = c("WW", "WL"),values=c("chartreuse4", "darkgoldenrod2"))+
+  scale_color_manual(labels = c("WW", "WL"),values=c("#6495ED", "#FFA500"))+
   labs(x= "Days", y="Hue Circular Mean", col="Treatment")+
   theme_bw()+
   theme(legend.text = element_text(size = 14),legend.title = element_text(size = 14), axis.title = element_text(size=14))+
@@ -116,7 +152,7 @@ cluster     = hclust(distance, method="ward.D")
 dendrogram  = as.dendrogram(cluster)
 
 color.palette = colorRampPalette(c("lightyellow","lightgreen","darkgreen"),space="rgb")
-pdf(file="control.hue.pdf",width = 7,height = 7,pointsize = 8,useDingbats = FALSE)
+pdf(file="control.hue.pdf",width = 7,height = 7,pointsize = 12,useDingbats = FALSE)
 control.hue<- heatmap.2(as.matrix(control.cast),
                   #Rowv=dendrogram,
                   Colv=FALSE,
@@ -138,7 +174,7 @@ control.hue<- heatmap.2(as.matrix(control.cast),
                   main="Well-Watered Hue Circular Mean")
 dev.off()
 
-pdf(file="drought.hue.pdf",width = 7,height = 7,pointsize = 8,useDingbats = FALSE)
+pdf(file="drought.hue.pdf",width = 7,height = 7,pointsize = 12,useDingbats = FALSE)
 control.hue<- heatmap.2(as.matrix(drought.cast),
                        # Rowv=dendrogram,
                         Colv=FALSE,
