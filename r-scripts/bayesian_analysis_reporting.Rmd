@@ -1,0 +1,112 @@
+---
+title: "Bayesian analysis reporting"
+output:
+  pdf_document: default
+  html_document: default
+date: "2024-01-24"
+---
+
+```{r setup, include=FALSE}
+library(brms)
+library(pcvr)
+library(patchwork)
+library(ggplot2)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Making tables/plots
+
+```{r}
+files <- dir("~/Desktop/model_fit_R_objects", full.names = TRUE)
+for(file in files){load(file)}
+table(unlist(lapply(ls(pattern="_fit"), function(m){ dim(as.data.frame(get(m))) })))
+if(interactive()){for(model in ls(pattern="_fit")){print(summary(get(model)))} }
+```
+
+
+### Hypothesis Testing
+
+```{r}
+
+hypotheses <- do.call(rbind, lapply(ls(pattern="_fit"), function(str){
+  A<-brms::hypothesis(get(str), "A_trtWellwatered > 1.5 * A_trtWaterlimited")$h
+  A$par <-"A"
+  B<-brms::hypothesis(get(str), "B_trtWellwatered > 1.05 * B_trtWaterlimited")$h
+  B$par <-"B"
+  C<-brms::hypothesis(get(str), "C_trtWellwatered > 1.05 * C_trtWaterlimited")$h
+  C$par <-"C"
+  out <- rbind(A,B,C)
+  out$fit <- str
+  out
+}))
+head(hypotheses)
+summary(hypotheses[hypotheses$par=="A", "Post.Prob"])
+summary(hypotheses[hypotheses$par=="B", "Post.Prob"])
+summary(hypotheses[hypotheses$par=="C", "Post.Prob"])
+summary(hypotheses[hypotheses$par=="C", "Estimate"])
+
+write.csv(hypotheses, "hypotheses_supplementaryTable.csv", row.names = FALSE)
+```
+
+
+### Checking model convergence metrics (sup table XYZ)
+
+#### Rhat
+
+Rhat compares between vs within chain draws. If they have not "mixed" well (meaning a chain got stuck doing something weird) then this will be above 1, with 1.05 being considered the cutoff for starting to be concerned but some stricter people may say 1.01 is not great. Depending on the cutoff used, these might be considered good but not great (longer chains should help).
+
+```{r}
+rhats <- do.call(rbind, lapply(ls(pattern="_fit"), function(str){
+  brms::rhat(get(str))
+}))
+rhat_metrics <- apply(rhats, MARGIN = 2, summary)
+summary(as.numeric(rhat_metrics)) # model params and smooths
+write.csv(rhat_metrics, "Rhat_supplementaryTable.csv", row.names=TRUE)
+```
+
+#### neff ratio
+
+Effective Sample Size/total sample size, we want these to be between 0.5 and 1.
+
+```{r}
+neff <- do.call(rbind, lapply(ls(pattern="_fit"), function(str){
+  brms::neff_ratio(get(str))
+}))
+neff_metrics <- apply(neff, MARGIN = 2, summary)
+write.csv(neff_metrics, "NEFF_supplementaryTable.csv", row.names=TRUE)
+```
+
+
+### prior predictive supplemental
+
+```{r}
+set.seed(123)
+pp1 <- plotPrior(priors = list("A"=130, "B"=15, "C"=0.25), type="gompertz")$simulated+
+  patchwork::plot_annotation(title = "Prior Predictive Check for Area Growth Model")
+pp1
+ggsave("priorPredictiveCheck_mainGrowthModel.svg", pp1, width=8, height=7, dpi=300, bg="#ffffff")
+
+
+set.seed(123)
+pp2 <- plotPrior(priors = list("A"=20, "B"=10, "C"=3), type="logistic")$simulated+
+  patchwork::plot_annotation(title = "Prior Predictive Check for Increase in Variance")
+pp2
+ggsave("priorPredictiveCheck_varianceSubModel.svg", pp2, width=8, height=7, dpi=300, bg="#ffffff")
+```
+
+### Versions
+
+`library(cmdstanr)` will show the cmdstan version as will `cmdstanr::cmdstan_version()`
+Otherwise, sessionInfo().
+These would need to be run by you to get your data, unless I rerun something.
+
+```{r, eval=FALSE}
+cmdstanr::cmdstan_version()
+sessionInfo()
+```
+
+
+
+
+
