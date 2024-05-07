@@ -2,6 +2,8 @@ library(tidyverse)
 library(pcvr)
 library(data.table)
 library(patchwork)
+library(pcvr)
+library(viridis)
 
 setwd("~/Documents/brassica-image-analysis/shape_data/")
 
@@ -29,7 +31,7 @@ parents <- parents %>% unite("plant", c(Genotype.ID, Replicate, Timepoint), sep=
 #parents$trt <- sub("100", "Well watered", parents$trt)
 
 
-sm.parents <- filter(parents, Genotype.ID == "Ze2")
+sm.parents <- filter(parents, Genotype.ID == "Ab4-28")
 sm.parents <- filter(sm.parents, days <= 26)
 colnames(sm.parents)[3] <- "trt"
 sm.parents$trt <- sub("20", "Water limited", sm.parents$trt)
@@ -43,22 +45,22 @@ ss<-growthSS(model="gompertz",
              type="brms")
 
 
-Ze_fit <- fitGrowth(ss, iter = 2000,
+Ab_fit <- fitGrowth(ss, iter = 2000,
                       cores = 2, chains = 2, backend = "cmdstanr",
                       control = list(adapt_delta = 0.999, max_treedepth = 20))
 
-save(Ze_fit, file = "./Gompertz_curves/new_pcvr_plots/Ze_fit.RData")
-rm(Ze_fit)
+save(Ab_fit, file = "./Gompertz_curves/new_pcvr_plots/Ab_fit.RData")
+rm(Ab_fit)
 #Av1 <-summary(Av1_fit)
 
 ###########################
 
-setwd("~/Documents/brassica-image-analysis/shape_data/")
+setwd("~/Documents/brassica-image-analysis/shape_data/Gompertz_curves/new_pcvr_plots/")
 
-load("./Gompertz_curves/new_pcvr_plots/Ab_fit.RData")
-load("./Gompertz_curves/new_pcvr_plots/Al_fit.RData")
-load("./Gompertz_curves/new_pcvr_plots/Av_fit.RData")
-load("./Gompertz_curves/new_pcvr_plots/Br_fit.RData")
+load("./model_fit_Robjects/Ab_fit.RData")
+load("./model_fit_Robjects/Al_fit.RData")
+load("./model_fit_Robjects/Av_fit.RData")
+load("./model_fit_Robjects/Br_fit.RData")
 load("./Gompertz_curves/new_pcvr_plots/Ca_fit.RData")
 load("./Gompertz_curves/new_pcvr_plots/Da_fit.RData")
 load("./Gompertz_curves/new_pcvr_plots/DH12_fit.RData")
@@ -129,7 +131,7 @@ testall <- rbind(testAb, testAl, testAv, testBr, testCa, testDa, testDH12, testD
 write.csv(testall, "./pcvr_bayesian_test_A_results.csv", row.names = FALSE)
 
 #testing that the well watered plant growth rate is at least 5% larger than the water limited treatment
-testAb <- brms::hypothesis(Ab4_fit, "C_trtWellwatered > 1.05 * C_trtWaterlimited")$hyp
+testAb <- brms::hypothesis(Ab_fit, "C_trtWellwatered > 1.05 * C_trtWaterlimited")$hyp
 testAb$Genotype <- "Ab"
 testAl <- brms::hypothesis(Al_fit, "C_trtWellwatered > 1.05 * C_trtWaterlimited")$hyp
 testAl$Genotype <- "Al"
@@ -169,7 +171,7 @@ write.csv(testall, "./pcvr_bayesian_test_C_results.csv", row.names = FALSE)
 
 
 #testing that the well watered plant B is at least 5% larger than the water limited treatment
-testAb <- brms::hypothesis(Ab4_fit, "B_trtWellwatered > 1.05 * B_trtWaterlimited")$hyp
+testAb <- brms::hypothesis(Ab_fit, "B_trtWellwatered > 1.05 * B_trtWaterlimited")$hyp
 testAb$Genotype <- "Ab"
 testAl <- brms::hypothesis(Al_fit, "B_trtWellwatered > 1.05 * B_trtWaterlimited")$hyp
 testAl$Genotype <- "Al"
@@ -210,7 +212,7 @@ write.csv(testall, "./pcvr_bayesian_test_B_results.csv", row.names = FALSE)
 ########
 # plots
 
-Ab4 <- growthPlot(Ab4_fit, form = area~days|plant/trt)+
+Ab4 <- growthPlot(Ab_fit, form = area~days|plant/trt)+
   labs(x = "Days", y = paste("Area", "(cm", "\u00B2", ")", sep = ""))+
   geom_text(x=5, y=300, label="Ab", size = 5, fontface = "plain")+
   ylim(0, 350)+
@@ -223,6 +225,7 @@ Ab4 <- growthPlot(Ab4_fit, form = area~days|plant/trt)+
                         axis.title.x = element_blank(),
                         axis.text.x = element_blank(),
                         axis.text.y = element_text(size = 11)) #axis numbers text size
+Ab4
 
 Al1 <- growthPlot(Al_fit, form = area~days|plant/trt)+
   labs(x = "Days", y = paste("Area", "(cm", "\u00B2", ")", sep = ""))+
